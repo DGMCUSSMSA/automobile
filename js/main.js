@@ -1,8 +1,10 @@
 document.addEventListener('DOMContentLoaded', function() {
   // Nuovo deploy URL del Google Apps Script
-  const deployURL = 'https://script.google.com/macros/s/AKfycbxSKihVOaQg7pFffWusV-6AKKkIXHD-NLzxzRF8Q0bt/dev';
+  const deployURL = 'https://script.google.com/macros/s/AKfycbz2DnQMlNmC8ZNly8BmqGjEp5Xjt1tAR5eMrRU_0l6imIPgDtm0eidl9TIiV6K5c-eGzw/exec';
 
-  // Funzione per recuperare la lista degli operatori e popolare il menu a tendina
+  /**
+   * Recupera la lista degli operatori dal backend e popola il menu a tendina.
+   */
   function fetchOperators() {
     fetch(`${deployURL}?action=getOperators`)
       .then(response => response.json())
@@ -26,13 +28,15 @@ document.addEventListener('DOMContentLoaded', function() {
       });
   }
 
-  // Funzione per recuperare e visualizzare gli appuntamenti in una tabella
+  /**
+   * Recupera la lista degli appuntamenti dal backend e li visualizza in una tabella.
+   */
   function fetchAppointments() {
     fetch(`${deployURL}?action=getPrenotazioni`)
       .then(response => response.json())
       .then(data => {
         const tableBody = document.getElementById('appointmentsTableBody');
-        tableBody.innerHTML = ''; // Pulisce la tabella
+        tableBody.innerHTML = ''; // Pulisce il contenuto precedente
         if (data && data.length > 0) {
           data.forEach(appointment => {
             const row = document.createElement('tr');
@@ -54,12 +58,14 @@ document.addEventListener('DOMContentLoaded', function() {
       });
   }
 
-  // Gestione del submit del form per l'invio della prenotazione
+  /**
+   * Gestisce il submit del form per l'invio di una nuova prenotazione.
+   */
   const prenotazioneForm = document.getElementById('prenotazioneForm');
   prenotazioneForm.addEventListener('submit', function(event) {
     event.preventDefault();
 
-    // Raccogli i dati del form
+    // Raccoglie i dati del form
     const prenotazioneData = {
       data: document.getElementById('data').value,
       oraInizio: document.getElementById('oraInizio').value,
@@ -67,12 +73,12 @@ document.addEventListener('DOMContentLoaded', function() {
       motivoPrenotazione: document.getElementById('motivo').value,
       luogoVisita: document.getElementById('luogo').value,
       email: document.getElementById('email').value,
-      // Utilizza il valore selezionato dal menu degli operatori
+      // Utilizza il valore selezionato dal menu degli operatori come "nomiOperatori"
       nomiOperatori: document.getElementById('operatorSelect').value,
       stato: "Attiva"
     };
 
-    // Effettua la chiamata POST per inviare la prenotazione
+    // Invio della prenotazione tramite POST
     fetch(deployURL, {
       method: 'POST',
       mode: 'cors',
@@ -94,7 +100,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   });
 
-  // Carica dinamicamente operatori e appuntamenti al caricamento della pagina
+  // Carica operatori e appuntamenti all'avvio della pagina
   fetchOperators();
   fetchAppointments();
 });
