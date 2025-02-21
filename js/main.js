@@ -1,12 +1,14 @@
-document.addEventListener('DOMContentLoaded', function() {
-  // Nuovo deploy URL del Google Apps Script
+$(document).ready(function(){
+  // Deploy URL del Google Apps Script
   const deployURL = 'https://script.google.com/macros/s/AKfycbyHH6t6GUVvrQxR0fD8voVQKVzx5-oNas06rT1njf_XBJXtwK-ebq7CTpUfirGAD1yuiw/exec';
   
-  // Variabile globale per salvare i dati degli operatori (nome ed email)
+  // Variabile globale per salvare i dati degli operatori (array di oggetti {display, email})
   let globalOperators = [];
 
   /**
-   * Recupera la lista degli operatori e popola il menu a tendina sia per la prenotazione che per il modal di modifica.
+   * Recupera la lista degli operatori e popola:
+   * - Il select singolo del form di creazione (#operatorSelect)
+   * - Il multi-select del modal di modifica (#editOperatorSelect)
    */
   function fetchOperators(){
     $.ajax({
@@ -14,38 +16,43 @@ document.addEventListener('DOMContentLoaded', function() {
       dataType: 'jsonp',
       data: { action: 'getOperators' },
       success: function(data){
-        globalOperators = data; // Salva globalmente per lookup
-        // Popola il select del form di prenotazione (singolo select)
-        var operatorSelect = $('#operatorSelect');
-        operatorSelect.empty();
+        globalOperators = data; // Salva per eventuali lookup
+        // Popola il select per la creazione
+        let $operatorSelect = $('#operatorSelect');
+        $operatorSelect.empty();
         if(data && data.length > 0){
           $.each(data, function(i, op){
-            operatorSelect.append($('<option>', { value: op.email, text: op.display }));
+            $operatorSelect.append($('<option>', {
+              value: op.email,
+              text: op.display
+            }));
           });
         } else {
-          operatorSelect.append($('<option>', { value: '', text: 'Nessun operatore trovato' }));
+          $operatorSelect.append($('<option>', { value: '', text: 'Nessun operatore trovato' }));
         }
-        // Popola il select del modal per la modifica (multi-select)
-        var editSelect = $('#editOperatorSelect');
-        editSelect.empty();
+        // Popola il multi-select per la modifica
+        let $editSelect = $('#editOperatorSelect');
+        $editSelect.empty();
         if(data && data.length > 0){
           $.each(data, function(i, op){
-            editSelect.append($('<option>', { value: op.email, text: op.display }));
+            $editSelect.append($('<option>', {
+              value: op.email,
+              text: op.display
+            }));
           });
         } else {
-          editSelect.append($('<option>', { value: '', text: 'Nessun operatore trovato' }));
+          $editSelect.append($('<option>', { value: '', text: 'Nessun operatore trovato' }));
         }
       },
       error: function(){
-        $('#operatorSelect').html('<option value="">Errore nel caricamento</option>');
-        $('#editOperatorSelect').html('<option value="">Errore nel caricamento</option>');
+        $('#operatorSelect, #editOperatorSelect').html('<option value="">Errore nel caricamento</option>');
       }
     });
   }
-  
+
   /**
-   * Recupera e visualizza gli appuntamenti in una tabella.
-   * Aggiunge anche un listener per il click su ogni riga per aprire il modal di modifica.
+   * Recupera la lista degli appuntamenti e la visualizza nella tabella.
+   * Aggiunge anche un listener per aprire il modal di modifica al click della riga.
    */
   function fetchAppointments(){
     $.ajax({
@@ -53,24 +60,25 @@ document.addEventListener('DOMContentLoaded', function() {
       dataType: 'jsonp',
       data: { action: 'getPrenotazioni' },
       success: function(data){
-        var tableBody = $('#appointmentsTableBody');
-        tableBody.empty(); // Pulisce la tabella
+        let $tableBody = $('#appointmentsTableBody');
+        $tableBody.empty();
         if(data && data.length > 0){
           $.each(data, function(i, app){
-            var row = $('<tr>').addClass('appointmentRow').data('appointment', app);
-            row.append($('<td>').text(app.title));
-            row.append($('<td>').text(app.start));
-            row.append($('<td>').text(app.end));
-            row.append($('<td>').text(app.email));
-            tableBody.append(row);
+            // Crea una riga e associa i dati dell'appuntamento
+            let $row = $('<tr>').addClass('appointmentRow').data('appointment', app);
+            $row.append($('<td>').text(app.title));
+            $row.append($('<td>').text(app.start));
+            $row.append($('<td>').text(app.end));
+            $row.append($('<td>').text(app.email));
+            $tableBody.append($row);
           });
-          // Aggiunge il listener per il click sulle righe degli appuntamenti
+          // Aggiunge il click handler per ogni riga
           $('.appointmentRow').on('click', function(){
-            var appData = $(this).data('appointment');
+            let appData = $(this).data('appointment');
             openEditModal(appData);
           });
         } else {
-          tableBody.html('<tr><td colspan="4" class="text-center">Nessun appuntamento trovato</td></tr>');
+          $tableBody.html('<tr><td colspan="4" class="text-center">Nessun appuntamento trovato</td></tr>');
         }
       },
       error: function(){
@@ -78,28 +86,47 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     });
   }
+
+  /**
+   * Aggiorna il campo email del modal (#editOperatorEmail) in base agli operatori selezionati nel multi-select.
+   */
+  function updateEditOperatorEmail(){
+    let selectedEmails = [];
+    $('#editOperatorSelect option:selected').each(function(){
+      selectedEmails.push($(this).val());
+    });
+    $('#editOperatorEmail').val(selectedEmails.join(', '));
+  }
+  
+  // Listener per aggiornare in tempo reale il campo email quando la selezione degli operatori cambia
+  $('#editOperatorSelect').on('change', updateEditOperatorEmail);
   
   /**
-   * Apertura del modal di modifica, pre-compilando i campi con i dati dell'appuntamento selezionato.
-   * Il campo per gli operatori è un multi-select e il campo email viene aggiornato automaticamente.
+   * Apre il modal di modifica pre-compilando i campi con i dati dell'appuntamento selezionato.
+   * Il campo multi-select viene impostato in base ai nomi operatori dell'appuntamento.
    */
-  function openEditModal(appData) {
+  function openEditModal(appData){
     // Pre-compila i campi del modal
-    $('#editDate').val(appData.start.split('T')[0]); // Supponendo formato "yyyy-MM-ddTHH:mm"
-    $('#editOraInizio').val(appData.start.split('T')[1]);
-    $('#editOraFine').val(appData.end.split('T')[1]);
-    $('#editMotivo').val(appData.title.split(" - ")[1] || ""); // Personalizza come vuoi
-    $('#editLuogo').val(appData.title.split(" - ")[2] || "");
+    // Supponiamo che appData.start sia nel formato "yyyy-MM-ddTHH:mm" e appData.end analogamente
+    let startParts = appData.start.split('T');
+    let endParts = appData.end.split('T');
+    $('#editDate').val(startParts[0]);
+    $('#editOraInizio').val(startParts[1]);
+    $('#editOraFine').val(endParts[1]);
+    // Per il titolo, supponiamo che il formato sia "operatori - motivo - luogo"
+    let parts = appData.title.split(" - ");
+    $('#editMotivo').val(parts[1] || '');
+    $('#editLuogo').val(parts[2] || '');
+    // Salva l'ID dell'appuntamento (assumendo che appData.id esista)
+    $('#editId').val(appData.id);
     
-    // Seleziona nel multi-select gli operatori in base al campo "nomiOperatori"
-    // Assumiamo che appData.nomiOperatori sia una stringa con nomi separati da virgola
-    var operatorNames = appData.nomiOperatori ? appData.nomiOperatori.split(',') : [];
-    // Rimuoviamo eventuali spazi
-    operatorNames = operatorNames.map(function(op) { return op.trim(); });
+    // Per il multi-select: se appData.nomiOperatori è una stringa separata da virgola, impostala
+    let operatorNames = appData.nomiOperatori ? appData.nomiOperatori.split(',') : [];
+    operatorNames = operatorNames.map(function(n){ return n.trim(); });
     
-    // Seleziona le opzioni nel multi-select corrispondenti (confrontando il testo)
+    // Imposta la selezione nel multi-select (confronta il testo dell'opzione)
     $('#editOperatorSelect option').each(function(){
-      var optionText = $(this).text().trim();
+      let optionText = $(this).text().trim();
       if(operatorNames.indexOf(optionText) !== -1){
         $(this).prop('selected', true);
       } else {
@@ -107,42 +134,28 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     });
     
-    // Aggiorna il campo email (disabilitato) unendo le email degli operatori selezionati
+    // Aggiorna il campo email in base agli operatori selezionati
     updateEditOperatorEmail();
     
-    // Mostra il modal (utilizza il plugin/modal che preferisci; qui si assume Bootstrap)
+    // Mostra il modal (assumendo Bootstrap)
     $('#editModal').modal('show');
   }
   
   /**
-   * Aggiorna il campo email del modal in base agli operatori selezionati.
-   */
-  function updateEditOperatorEmail(){
-    var selectedEmails = [];
-    $('#editOperatorSelect option:selected').each(function(){
-      selectedEmails.push($(this).val());
-    });
-    // Imposta il campo email (disabilitato) con le email selezionate, separate da virgola
-    $('#editOperatorEmail').val(selectedEmails.join(', '));
-  }
-  
-  // Aggiunge il listener per aggiornare automaticamente il campo email quando la selezione cambia nel modal
-  $('#editOperatorSelect').on('change', updateEditOperatorEmail);
-  
-  /**
-   * Gestione del submit del form per l'invio di una nuova prenotazione (creazione).
+   * Gestione del submit del form per la creazione di una nuova prenotazione.
    */
   $('#prenotazioneForm').on('submit', function(e){
     e.preventDefault();
     
-    var prenotazioneData = {
+    let prenotazioneData = {
       data: $('#data').val(),
       oraInizio: $('#oraInizio').val(),
       oraFine: $('#oraFine').val(),
       motivoPrenotazione: $('#motivo').val(),
       luogoVisita: $('#luogo').val(),
-      email: $('#email').val(),  // Campo email editabile nel form di creazione
-      nomiOperatori: $('#operatorSelect').find('option:selected').text(), // Selezione singola
+      email: $('#email').val(), // Campo editabile nel form di creazione
+      // Per la creazione usiamo il select singolo, quindi un solo operatore
+      nomiOperatori: $('#operatorSelect').find('option:selected').text(),
       stato: "Attiva"
     };
     
@@ -166,27 +179,25 @@ document.addEventListener('DOMContentLoaded', function() {
   
   /**
    * Gestione del submit del form di modifica dell'appuntamento.
-   * (Dovrai implementare una funzione simile al backend per la modifica.)
    */
   $('#editForm').on('submit', function(e){
     e.preventDefault();
     
-    // Raccogli i dati modificati dal modal
-    var editData = {
-      id: $('#editId').val(), // id dell'appuntamento, da salvare nel data-attribute quando apri il modal
+    let editData = {
+      id: $('#editId').val(),
       data: $('#editDate').val(),
       oraInizio: $('#editOraInizio').val(),
       oraFine: $('#editOraFine').val(),
       motivoPrenotazione: $('#editMotivo').val(),
       luogoVisita: $('#editLuogo').val(),
-      // Il campo email è disabilitato, lo aggiorniamo automaticamente
-      email: $('#editOperatorEmail').val(),
-      // Il multi-select consente la selezione di più operatori; qui li uniamo in una stringa
-      nomiOperatori: $('#editOperatorSelect').find('option:selected').map(function(){ return $(this).text().trim(); }).get().join(', '),
+      email: $('#editOperatorEmail').val(), // Campo aggiornato automaticamente
+      // Uniamo i nomi degli operatori selezionati
+      nomiOperatori: $('#editOperatorSelect').find('option:selected').map(function(){
+                      return $(this).text().trim();
+                    }).get().join(', '),
       stato: "Attiva"
     };
     
-    // Qui dovresti fare una chiamata AJAX per modificare l'appuntamento (es. action=modificaPrenotazione)
     $.ajax({
       url: deployURL,
       dataType: 'jsonp',
@@ -206,7 +217,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   });
   
-  // Inizializza il caricamento iniziale degli operatori e degli appuntamenti
+  // Inizializza il caricamento degli operatori e degli appuntamenti
   fetchOperators();
   fetchAppointments();
 });
