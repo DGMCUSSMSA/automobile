@@ -1,13 +1,13 @@
 $(document).ready(function(){
   // Deploy URL del Google Apps Script
-  const deployURL = 'https://script.google.com/macros/s/AKfycbztZqbYuSSMW6SvGlXSpW8A24fP1v2NtFgt9KoZiZT8bOIFWh2JKzQv4acMcZCsfhZJmw/exec';
+  const deployURL = 'https://script.google.com/macros/s/AKfycbyHH6t6GUVvrQxR0fD8voVQKVzx5-oNas06rT1njf_XBJXtwK-ebq7CTpUfirGAD1yuiw/exec';
   
   // Variabile globale per salvare i dati degli operatori (array di oggetti {display, email})
   let globalOperators = [];
 
   /**
    * Recupera la lista degli operatori e popola:
-   * - Il select singolo del form di creazione (#operatorSelect)
+   * - Il select del form di creazione (#operatorSelect) (se usato come selezione singola)
    * - Il multi-select del modal di modifica (#editOperatorSelect)
    */
   function fetchOperators(){
@@ -17,7 +17,7 @@ $(document).ready(function(){
       data: { action: 'getOperators' },
       success: function(data){
         globalOperators = data; // Salva per eventuali lookup
-        // Popola il select per la creazione
+        // Popola il select per la creazione (se si usa una selezione singola)
         let $operatorSelect = $('#operatorSelect');
         $operatorSelect.empty();
         if(data && data.length > 0){
@@ -30,7 +30,7 @@ $(document).ready(function(){
         } else {
           $operatorSelect.append($('<option>', { value: '', text: 'Nessun operatore trovato' }));
         }
-        // Popola il multi-select per la modifica
+        // Popola il multi-select per il modal di modifica
         let $editSelect = $('#editOperatorSelect');
         $editSelect.empty();
         if(data && data.length > 0){
@@ -64,7 +64,6 @@ $(document).ready(function(){
         $tableBody.empty();
         if(data && data.length > 0){
           $.each(data, function(i, app){
-            // Crea una riga e associa i dati dell'appuntamento
             let $row = $('<tr>').addClass('appointmentRow').data('appointment', app);
             $row.append($('<td>').text(app.title));
             $row.append($('<td>').text(app.start));
@@ -72,7 +71,7 @@ $(document).ready(function(){
             $row.append($('<td>').text(app.email));
             $tableBody.append($row);
           });
-          // Aggiunge il click handler per ogni riga
+          // Aggiungi il listener per il click su ogni riga
           $('.appointmentRow').on('click', function(){
             let appData = $(this).data('appointment');
             openEditModal(appData);
@@ -98,33 +97,31 @@ $(document).ready(function(){
     $('#editOperatorEmail').val(selectedEmails.join(', '));
   }
   
-  // Listener per aggiornare in tempo reale il campo email quando la selezione degli operatori cambia
+  // Aggiunge il listener per aggiornare il campo email in tempo reale quando cambia la selezione
   $('#editOperatorSelect').on('change', updateEditOperatorEmail);
   
   /**
-   * Apre il modal di modifica pre-compilando i campi con i dati dell'appuntamento selezionato.
-   * Il campo multi-select viene impostato in base ai nomi operatori dell'appuntamento.
+   * Apre il modal di modifica, pre-compilando i campi con i dati dell'appuntamento selezionato.
    */
   function openEditModal(appData){
-    // Pre-compila i campi del modal
-    // Supponiamo che appData.start sia nel formato "yyyy-MM-ddTHH:mm" e appData.end analogamente
+    // Pre-compila i campi del modal. Supponiamo che appData.start e appData.end siano nel formato "yyyy-MM-ddTHH:mm"
     let startParts = appData.start.split('T');
     let endParts = appData.end.split('T');
     $('#editDate').val(startParts[0]);
     $('#editOraInizio').val(startParts[1]);
     $('#editOraFine').val(endParts[1]);
-    // Per il titolo, supponiamo che il formato sia "operatori - motivo - luogo"
+    // Supponiamo che il titolo sia formattato come "operatori - motivo - luogo"
     let parts = appData.title.split(" - ");
     $('#editMotivo').val(parts[1] || '');
     $('#editLuogo').val(parts[2] || '');
     // Salva l'ID dell'appuntamento (assumendo che appData.id esista)
     $('#editId').val(appData.id);
     
-    // Per il multi-select: se appData.nomiOperatori è una stringa separata da virgola, impostala
+    // Se appData.nomiOperatori è una stringa separata da virgola, imposta la selezione nel multi-select
     let operatorNames = appData.nomiOperatori ? appData.nomiOperatori.split(',') : [];
     operatorNames = operatorNames.map(function(n){ return n.trim(); });
     
-    // Imposta la selezione nel multi-select (confronta il testo dell'opzione)
+    // Imposta la selezione in base al testo dell'opzione (che rappresenta il nome)
     $('#editOperatorSelect option').each(function(){
       let optionText = $(this).text().trim();
       if(operatorNames.indexOf(optionText) !== -1){
@@ -153,9 +150,12 @@ $(document).ready(function(){
       oraFine: $('#oraFine').val(),
       motivoPrenotazione: $('#motivo').val(),
       luogoVisita: $('#luogo').val(),
-      email: $('#email').val(), // Campo editabile nel form di creazione
-      // Per la creazione usiamo il select singolo, quindi un solo operatore
-      nomiOperatori: $('#operatorSelect').find('option:selected').text(),
+      email: $('#email').val(),
+      // Se vuoi che anche la creazione supporti più operatori, usa un multi-select; altrimenti, puoi usare il select singolo.
+      nomiOperatori: $('#operatorSelect').find('option:selected')
+                         .map(function(){ return $(this).text().trim(); })
+                         .get()
+                         .join(', '),
       stato: "Attiva"
     };
     
@@ -190,11 +190,11 @@ $(document).ready(function(){
       oraFine: $('#editOraFine').val(),
       motivoPrenotazione: $('#editMotivo').val(),
       luogoVisita: $('#editLuogo').val(),
-      email: $('#editOperatorEmail').val(), // Campo aggiornato automaticamente
-      // Uniamo i nomi degli operatori selezionati
-      nomiOperatori: $('#editOperatorSelect').find('option:selected').map(function(){
-                      return $(this).text().trim();
-                    }).get().join(', '),
+      email: $('#editOperatorEmail').val(),
+      nomiOperatori: $('#editOperatorSelect').find('option:selected')
+                        .map(function(){ return $(this).text().trim(); })
+                        .get()
+                        .join(', '),
       stato: "Attiva"
     };
     
