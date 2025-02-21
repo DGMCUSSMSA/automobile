@@ -1,6 +1,6 @@
 $(document).ready(function(){
   // Deploy URL del Google Apps Script
-  const deployURL = 'https://script.google.com/macros/s/AKfycbyHH6t6GUVvrQxR0fD8voVQKVzx5-oNas06rT1njf_XBJXtwK-ebq7CTpUfirGAD1yuiw/exec';
+  const deployURL = 'https://script.google.com/macros/s/AKfycbwWCatCkg0YH5Xktr97ltB-9V8RumtXJemnddp0D7gz3NQbKTDsr4OodxrNM30zyerEHg/exec';
   
   // Variabile globale per salvare i dati degli operatori (array di oggetti {display, email})
   let globalOperators = [];
