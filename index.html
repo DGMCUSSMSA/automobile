@@ -2,80 +2,145 @@
 <html lang="it">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gestione Prenotazioni Mobile</title>
-  <!-- Bootstrap CSS -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gestione Prenotazioni</title>
+  <!-- Bootstrap CSS (versione completa) -->
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-  <!-- CSS personalizzato -->
+  <!-- Eventuali stili personalizzati -->
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <div class="container">
-    <h1 class="mt-5 text-center">Gestione Prenotazioni1</h1>
-
-    <!-- Sezione per la nuova prenotazione -->
-    <div class="booking-form mt-4">
-      <h2>Nuova Prenotazione1</h2>
-      <form id="prenotazioneForm">
-        <div class="form-group">
-          <label for="data">Data</label>
-          <input type="date" class="form-control" id="data" required>
-        </div>
-        <div class="form-group">
-          <label for="oraInizio">Ora Inizio</label>
-          <input type="time" class="form-control" id="oraInizio" required>
-        </div>
-        <div class="form-group">
-          <label for="oraFine">Ora Fine</label>
-          <input type="time" class="form-control" id="oraFine" required>
-        </div>
-        <div class="form-group">
-          <label for="motivo">Motivo Prenotazione</label>
-          <input type="text" class="form-control" id="motivo" required>
-        </div>
-        <div class="form-group">
-          <label for="luogo">Luogo Visita</label>
-          <input type="text" class="form-control" id="luogo" required>
-        </div>
-        <div class="form-group">
-          <label for="email">Email Operatori (separare con virgola)</label>
-          <input type="text" class="form-control" id="email" required>
-        </div>
-        <div class="form-group">
-          <label for="operatori">Seleziona Operatore</label>
-          <select class="form-control" id="operatorSelect">
-            <option value="">Caricamento operatori...</option>
-          </select>
-        </div>
-        <button type="submit" class="btn btn-primary btn-block">Invia Prenotazione</button>
-      </form>
+  <div class="container mt-4">
+    <h1 class="text-center mb-4">Gestione Prenotazioni</h1>
+    
+    <!-- Form di creazione prenotazione -->
+    <div class="card mb-4">
+      <div class="card-header">
+        Nuova Prenotazione
+      </div>
+      <div class="card-body">
+        <form id="prenotazioneForm">
+          <div class="form-row">
+            <div class="form-group col-md-4">
+              <label for="data">Data</label>
+              <input type="date" class="form-control" id="data" required>
+            </div>
+            <div class="form-group col-md-4">
+              <label for="oraInizio">Ora Inizio</label>
+              <input type="time" class="form-control" id="oraInizio" required>
+            </div>
+            <div class="form-group col-md-4">
+              <label for="oraFine">Ora Fine</label>
+              <input type="time" class="form-control" id="oraFine" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="motivo">Motivo Prenotazione</label>
+            <input type="text" class="form-control" id="motivo" placeholder="Inserisci il motivo" required>
+          </div>
+          <div class="form-group">
+            <label for="luogo">Luogo Visita</label>
+            <input type="text" class="form-control" id="luogo" placeholder="Inserisci il luogo" required>
+          </div>
+          <div class="form-group">
+            <label for="email">Email (campo editabile)</label>
+            <input type="email" class="form-control" id="email" placeholder="Inserisci la tua email" required>
+          </div>
+          <div class="form-group">
+            <label for="operatorSelect">Seleziona Operatore</label>
+            <select class="form-control" id="operatorSelect" required>
+              <option value="">Caricamento operatori...</option>
+            </select>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block">Invia Prenotazione</button>
+        </form>
+      </div>
     </div>
-
-    <!-- Sezione per la lista degli appuntamenti -->
-    <div class="appointments mt-5">
-      <h2>Appuntamenti</h2>
-      <table class="table table-striped">
-        <thead>
-          <tr>
-            <th>Titolo</th>
-            <th>Inizio</th>
-            <th>Fine</th>
-            <th>Email</th>
-          </tr>
-        </thead>
-        <tbody id="appointmentsTableBody">
-          <tr>
-            <td colspan="4" class="text-center">Caricamento appuntamenti...</td>
-          </tr>
-        </tbody>
-      </table>
+    
+    <!-- Tabella Appuntamenti -->
+    <div class="card mb-4">
+      <div class="card-header">
+        Appuntamenti Programmati
+      </div>
+      <div class="card-body">
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th>Titolo</th>
+              <th>Inizio</th>
+              <th>Fine</th>
+              <th>Email</th>
+            </tr>
+          </thead>
+          <tbody id="appointmentsTableBody">
+            <tr>
+              <td colspan="4" class="text-center">Caricamento appuntamenti...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
-
-  <!-- Bootstrap e jQuery -->
-<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
-  <!-- JavaScript personalizzato -->
+  
+  <!-- Modal per la Modifica dell'Appuntamento -->
+  <div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="editModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <form id="editForm">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="editModalLabel">Modifica Appuntamento</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Chiudi">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <!-- Campo nascosto per l'ID dell'appuntamento -->
+            <input type="hidden" id="editId">
+            <div class="form-group">
+              <label for="editDate">Data</label>
+              <input type="date" id="editDate" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label for="editOraInizio">Ora Inizio</label>
+              <input type="time" id="editOraInizio" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label for="editOraFine">Ora Fine</label>
+              <input type="time" id="editOraFine" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label for="editMotivo">Motivo Prenotazione</label>
+              <input type="text" id="editMotivo" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label for="editLuogo">Luogo Visita</label>
+              <input type="text" id="editLuogo" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label for="editOperatorSelect">Seleziona Operatori (multipla selezione)</label>
+              <select id="editOperatorSelect" class="form-control" multiple required>
+                <!-- Le opzioni verranno caricate dinamicamente -->
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="editOperatorEmail">Email Operatori</label>
+              <input type="text" id="editOperatorEmail" class="form-control" disabled>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Chiudi</button>
+            <button type="submit" class="btn btn-primary">Salva Modifiche</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+  
+  <!-- jQuery (versione completa) -->
+  <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+  <!-- Bootstrap JS -->
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+  <!-- Il tuo main.js -->
   <script src="js/main.js"></script>
 </body>
 </html>
