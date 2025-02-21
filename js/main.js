@@ -1,6 +1,6 @@
 $(document).ready(function(){
   // Nuovo deploy URL del Google Apps Script
-  const deployURL = 'https://script.google.com/macros/s/AKfycbyHH6t6GUVvrQxR0fD8voVQKVzx5-oNas06rT1njf_XBJXtwK-ebq7CTpUfirGAD1yuiw/exec';
+  const deployURL = 'https://script.google.com/macros/s/AKfycbwCbfkuodwnray9M43LOAJzDm4sDDXysOi9BwzA3xXMUm7fgkyb4qaQVZ5tG5iAuQWqJA/exec';
   
   /**
    * Recupera la lista degli operatori e popola il menu a tendina.
