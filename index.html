@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestione Prenotazioni Mobile</title>
+  <!-- Bootstrap CSS via CDN -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <!-- File CSS personalizzato -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="container">
+    <h1 class="mt-5 text-center">Gestione Prenotazioni</h1>
+    <!-- Form di prenotazione -->
+    <form id="prenotazioneForm" class="mt-4">
+      <div class="form-group">
+        <label for="data">Data</label>
+        <input type="date" class="form-control" id="data" required>
+      </div>
+      <div class="form-group">
+        <label for="oraInizio">Ora Inizio</label>
+        <input type="time" class="form-control" id="oraInizio" required>
+      </div>
+      <div class="form-group">
+        <label for="oraFine">Ora Fine</label>
+        <input type="time" class="form-control" id="oraFine" required>
+      </div>
+      <div class="form-group">
+        <label for="motivo">Motivo Prenotazione</label>
+        <input type="text" class="form-control" id="motivo" required>
+      </div>
+      <div class="form-group">
+        <label for="luogo">Luogo Visita</label>
+        <input type="text" class="form-control" id="luogo" required>
+      </div>
+      <div class="form-group">
+        <label for="email">Email Operatori (separare con virgola)</label>
+        <input type="text" class="form-control" id="email" required>
+      </div>
+      <div class="form-group">
+        <label for="operatori">Nomi Operatori</label>
+        <input type="text" class="form-control" id="operatori" required>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block">Invia Prenotazione</button>
+    </form>
+  </div>
+
+  <!-- Bootstrap e jQuery via CDN -->
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- File JavaScript personalizzato -->
+  <script src="js/main.js"></script>
+</body>
+</html>
